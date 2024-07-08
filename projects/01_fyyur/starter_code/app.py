@@ -53,6 +53,17 @@ class Venue(db.Model):
     seeking_description = db.Column(db.String(120))
 
 
+class VenueAvailability(db.Model):
+    __tablename__ = 'VenueAvailability'
+
+    id = db.Column(db.Integer, primary_key=True)
+    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=False)
+
+    venue = db.relationship('Venue', backref=db.backref('availabilities', cascade='all, delete'))
+
+
 class Artist(db.Model):
     __tablename__ = 'Artist'
 
@@ -71,6 +82,17 @@ class Artist(db.Model):
     seeking_description = db.Column(db.String(120))
 
 
+class ArtistAvailability(db.Model):
+    __tablename__ = 'ArtistAvailability'
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=False)
+
+    artist = db.relationship('Artist', backref=db.backref('availabilities', cascade='all, delete'))
+
+
 # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 class Show(db.Model):
     __tablename__ = 'Show'
@@ -82,6 +104,17 @@ class Show(db.Model):
 
     venue = db.relationship('Venue', backref=db.backref('shows', cascade='all, delete'))
     artist = db.relationship('Artist', backref=db.backref('shows', cascade='all, delete'))
+
+
+class ShowAvailability(db.Model):
+    __tablename__ = 'ShowAvailability'
+
+    id = db.Column(db.Integer, primary_key=True)
+    show_id = db.Column(db.Integer, db.ForeignKey('Show.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
+    end_time = db.Column(db.DateTime, nullable=False)
+
+    show = db.relationship('Show', backref=db.backref('availabilities', cascade='all, delete'))
 
 
 # ----------------------------------------------------------------------------#
@@ -106,7 +139,9 @@ app.jinja_env.filters['datetime'] = format_datetime
 
 @app.route('/')
 def index():
-    return render_template('pages/home.html')
+    recent_artists = Artist.query.order_by(Artist.id.desc()).limit(10).all()
+    recent_venues = Venue.query.order_by(Venue.id.desc()).limit(10).all()
+    return render_template('pages/home.html', recent_artists=recent_artists, recent_venues=recent_venues)
 
 
 #  Venues
@@ -162,16 +197,30 @@ def search_venues():
     # Get search term
     search_term = request.form.get('search_term', '')
 
+    # Get search city
+    search_city = request.form.get('search_city', '').lower()
+
+    # Get search state
+    search_state = request.form.get('search_state', '').lower()
+
     # Search for venues with search term in their name
-    venues = Venue.query.filter(Venue.name.ilike(f'%{search_term}%')).all()
+    venues = Venue.query.filter(
+        Venue.name.ilike(f'%{search_term}%')).all()
+
+    # Search for venues with search term in their name
+    venues = Venue.query.filter(
+        Venue.name.ilike(f'%{search_term}%'),
+        Venue.city.ilike(f'%{search_city}%'),
+        Venue.state.ilike(f'%{search_state}%')
+    ).all()
 
     response = {
-        "count": 1,
+        "count": len(venues),
         "data": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
+            "id": venue.id,
+            "name": venue.name,
             "num_upcoming_shows": 0,
-        }]
+        } for venue in venues]
     }
     return render_template('pages/search_venues.html', results=response,
                            search_term=request.form.get('search_term', ''))
@@ -187,6 +236,7 @@ def show_venue(venue_id):
 
     if not venue:
         flash('Venue not found!', 'error')
+        return redirect(url_for('index'))
 
     data1 = {
         "id": 1,
@@ -399,16 +449,26 @@ def search_artists():
     # Get search term
     search_term = request.form.get('search_term', '')
 
+    # Get search city
+    search_city = request.form.get('search_city', '').lower()
+
+    # Get search state
+    search_state = request.form.get('search_state', '').lower()
+
     # Search for artists with search term in their name
-    artists = Artist.query.filter(Artist.name.ilike(f'%{search_term}%')).all()
+    artists = Artist.query.filter(
+        Artist.name.ilike(f'%{search_term}%'),
+        Artist.city.ilike(f'%{search_city}%'),
+        Artist.state.ilike(f'%{search_state}%')
+    ).all()
 
     response = {
-        "count": 1,
+        "count": len(artists),
         "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
+            "id": artist.id,
+            "name": artist.name,
+            "num_upcoming_shows": 0,  # Update this with actual logic to count upcoming shows if needed
+        } for artist in artists]
     }
     return render_template('pages/search_artists.html', results=response,
                            search_term=request.form.get('search_term', ''))
@@ -423,6 +483,8 @@ def show_artist(artist_id):
 
     if not artist:
         flash('Artist not found!', 'error')
+        return redirect(url_for('index'))
+
 
     data1 = {
         "id": 4,
@@ -740,7 +802,23 @@ def create_show_submission():
     artist_id = request.form.get('artist_id')
     start_time = request.form.get('start_time')
 
-    # Create new show
+    # Convert start_time to datetime
+    start_time_dt = datetime.strptime(start_time, '%Y-%m-%d %H:%M:%S')
+
+    # Check if venue and artist exist
+    artist = Artist.query.get(artist_id)
+    if artist:
+        is_avaible = ArtistAvailability.query.filter(
+            ArtistAvailability.artist_id == artist_id,
+            ArtistAvailability.start_time <= start_time_dt,
+            ArtistAvailability.end_time >= start_time_dt
+        ).first() is not None
+
+        if not is_avaible:
+            flash('Artist is not available at this time!', 'error')
+            return redirect(url_for('index'))  # Adjust the redirect as needed
+
+    # Proceed if artist is available or not found (for safety, should handle artist not found separately)
     show = Show(
         venue_id=venue_id,
         artist_id=artist_id,
@@ -754,6 +832,9 @@ def create_show_submission():
         # Commit session
         db.session.commit()
 
+        # on successful db insert, flash success
+        flash('Show was successfully listed!')
+
     # TODO: on unsuccessful db insert, flash an error instead.
     except:
         db.session.rollback()
@@ -761,7 +842,6 @@ def create_show_submission():
     finally:
         db.session.close()
     # on successful db insert, flash success
-    flash('Show was successfully listed!')
     # e.g., flash('An error occurred. Show could not be listed.')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     return render_template('pages/home.html')
