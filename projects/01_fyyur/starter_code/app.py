@@ -184,7 +184,6 @@ def create_venue_submission():
         # Add new venue to the database
         db.session.add(new_venue)
         db.session.commit()
-
         # on successful db insert, flash success
         flash('Venue ' + request.form['name'] + ' was successfully listed!')
     except Exception as e:
