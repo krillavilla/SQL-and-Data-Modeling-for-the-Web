@@ -81,7 +81,6 @@ def venues():
     return render_template('pages/venues.html', areas=data)
 
 
-
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
     # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
@@ -115,7 +114,7 @@ def show_venue(venue_id):
         data = {
             "id": venue.id,
             "name": venue.name,
-            "genres": venue.genre,
+            "genres": venue.genres,
             "address": venue.address,
             "city": venue.city,
             "state": venue.state,
@@ -169,7 +168,7 @@ def create_venue_submission():
         state = request.form.get('state')
         address = request.form.get('address')
         phone = request.form.get('phone')
-        genre = request.form.get('genre')
+        genres = request.form.get('genres')
         website = request.form.get('website')
         facebook_link = request.form.get('facebook_link')
         image_link = request.form.get('image_link')
@@ -178,7 +177,7 @@ def create_venue_submission():
 
         # Create new venue object
         new_venue = Venue(name=name, city=city, state=state, address=address,
-                          phone=phone, genre=genre, website=website, facebook_link=facebook_link,
+                          phone=phone, genres=genres, website=website, facebook_link=facebook_link,
                           image_link=image_link, seeking_talent=seeking_talent,
                           seeking_description=seeking_description)
 
@@ -188,8 +187,9 @@ def create_venue_submission():
 
         # on successful db insert, flash success
         flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    except:
+    except Exception as e:
         db.session.rollback()
+        print(f"Error: {e}")
         # TODO: on unsuccessful db insert, flash an error instead.
         # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
         # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
@@ -214,7 +214,9 @@ def delete_venue(venue_id):
             flash('Venue not found!')
     except Exception as e:
         db.session.rollback()
-        flash('An error occurred. Venue could not be deleted.')
+        print(f"Error: {e}")
+        flash(f'An error occurred. Venue ' + request.form['name'] +
+              ' could not be listed.')
     finally:
         db.session.close()
 
@@ -337,8 +339,9 @@ def edit_artist_submission(artist_id):
 
             db.session.commit()
             flash('Artist ' + request.form['name'] + ' was successfully updated!')
-        except:
+        except Exception as e:
             db.session.rollback()
+            print(f"Error: {e}")
             flash('An error occurred. Artist ' + request.form['name'] + ' could not be updated.')
         finally:
             db.session.close()
@@ -377,7 +380,7 @@ def edit_venue_submission(venue_id):
             venue.state = request.form.get('state')
             venue.address = request.form.get('address')
             venue.phone = request.form.get('phone')
-            venue.genre = request.form.get('genre')
+            venue.genres = request.form.get('genres')
             venue.website = request.form.get('website')
             venue.facebook_link = request.form.get('facebook_link')
             venue.image_link = request.form.get('image_link')
@@ -436,7 +439,9 @@ def create_artist_submission():
         flash('Artist ' + request.form['name'] + ' was successfully listed!')
     except Exception as e:
         db.session.rollback()
-        flash('An error occurred. Artist ' + request.form['name'] + ' could not be listed.')
+        print(f"Error Occurred: {e}")
+        flash(f'An error occurred. Venue ' + request.form['name'] +
+              ' could not be listed.')
     finally:
         db.session.close()
 
@@ -500,7 +505,9 @@ def create_show_submission():
         # Rollback the session if an error occurs
         db.session.rollback()
         # Flash an error message
-        flash('An error occurred. Show could not be listed.')
+        print(f"Error Occurred: {e}")
+        flash(f'An error occurred. Venue ' + request.form['name'] +
+              ' could not be listed.')
     finally:
         # Close the session
         db.session.close()
