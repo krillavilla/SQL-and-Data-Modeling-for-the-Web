@@ -189,7 +189,7 @@ def create_venue_submission():
         flash('Venue ' + request.form['name'] + ' was successfully listed!')
     except Exception as e:
         db.session.rollback()
-        print(f"Error: {e}")
+        flash(f"Error Occurred: {e}")
         # TODO: on unsuccessful db insert, flash an error instead.
         # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
         # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
@@ -214,9 +214,7 @@ def delete_venue(venue_id):
             flash('Venue not found!')
     except Exception as e:
         db.session.rollback()
-        print(f"Error: {e}")
-        flash(f'An error occurred. Venue ' + request.form['name'] +
-              ' could not be listed.')
+        flash(f"Error Occurred: {e}")
     finally:
         db.session.close()
 
@@ -341,8 +339,7 @@ def edit_artist_submission(artist_id):
             flash('Artist ' + request.form['name'] + ' was successfully updated!')
         except Exception as e:
             db.session.rollback()
-            print(f"Error: {e}")
-            flash('An error occurred. Artist ' + request.form['name'] + ' could not be updated.')
+            flash(f"Error Occurred: {e}")
         finally:
             db.session.close()
     else:
@@ -439,9 +436,7 @@ def create_artist_submission():
         flash('Artist ' + request.form['name'] + ' was successfully listed!')
     except Exception as e:
         db.session.rollback()
-        print(f"Error Occurred: {e}")
-        flash(f'An error occurred. Venue ' + request.form['name'] +
-              ' could not be listed.')
+        flash(f"Error Occurred: {e}")
     finally:
         db.session.close()
 
@@ -505,9 +500,7 @@ def create_show_submission():
         # Rollback the session if an error occurs
         db.session.rollback()
         # Flash an error message
-        print(f"Error Occurred: {e}")
-        flash(f'An error occurred. Venue ' + request.form['name'] +
-              ' could not be listed.')
+        flash(f"Error Occurred: {e}")
     finally:
         # Close the session
         db.session.close()
