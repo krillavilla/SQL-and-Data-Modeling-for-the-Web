@@ -12,5 +12,25 @@
     </ul>
 
 {#    Todo implement show search frontend #}
+    <form method="post" action="/shows/search">
+        <div class="form-group">
+            <label for="search">Search</label>
+            <input type="text" class="form-control" id="search" name="search" placeholder="Search">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+
+    <ul class="items">
+        {% for show in shows %}
+            <li>
+                <a href="/shows/{{ show.id }}">
+                    <i class="fas fa-users"></i>
+                    <div class="item">
+                        <h5>{{ show.name }}</h5>
+                    </div>
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
 
 {% endblock %}

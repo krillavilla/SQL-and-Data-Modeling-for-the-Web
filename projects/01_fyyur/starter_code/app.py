@@ -3,17 +3,16 @@
 # ----------------------------------------------------------------------------#
 
 import json
-import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
-from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import logging
 from logging import Formatter, FileHandler
-from flask_wtf import Form
 from forms import *
-from models import Venue, Artist, Show
+from models import db, Venue, Artist, Show
+from datetime import datetime
+import dateutil.parser
 
 # ----------------------------------------------------------------------------#
 # App Config.
@@ -22,8 +21,8 @@ from models import Venue, Artist, Show
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+db.init_app(app)
 
 # TODO: connect to a local postgresql database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1234@localhost:5432/fyyur'
@@ -60,9 +59,8 @@ def index():
 
 @app.route('/venues')
 def venues():
-    # Query distinct city and state from Venue
-    areas = Venue.query.with_entities(Venue.city, Venue.state).distinct().all()
     data = []
+    areas = Venue.query.distinct(Venue.city, Venue.state).all()
     for area in areas:
         venues_in_area = Venue.query.filter_by(city=area.city, state=area.state).all()
         venue_data = []
@@ -192,7 +190,7 @@ def create_venue_submission():
         # TODO: on unsuccessful db insert, flash an error instead.
         # e.g., flash('An error occurred. Venue ' + data.name + ' could not be listed.')
         # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-        flash('An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
+        flash(f'An error occurred. Venue ' + request.form['name'] + ' could not be listed.')
     finally:
         db.session.close()
 
@@ -214,6 +212,7 @@ def delete_venue(venue_id):
     except Exception as e:
         db.session.rollback()
         flash(f"Error Occurred: {e}")
+        flash(f"An error occurred. Venue could not be deleted.")
     finally:
         db.session.close()
 
@@ -227,22 +226,7 @@ def delete_venue(venue_id):
 @app.route('/artists')
 def artists():
     # TODO: replace with real data returned from querying the database
-    artist_list = Artist.query.all()
-
-    # Format the data for the template
-    data = [{
-        "id": artist.id,
-        "name": artist.name,
-        "city": artist.city,
-        "state": artist.state,
-        "phone": artist.phone,
-        "genres": artist.genres,
-        "image_link": artist.image_link,
-        "facebook_link": artist.facebook_link,
-        "seeking_venue": artist.seeking_venue,
-        "seeking_description": artist.seeking_description
-    } for artist in artist_list]
-
+    data = Artist.query.all()
     return render_template('pages/artists.html', artists=data)
 
 
@@ -339,6 +323,7 @@ def edit_artist_submission(artist_id):
         except Exception as e:
             db.session.rollback()
             flash(f"Error Occurred: {e}")
+            flash(f'An error occurred. Artist ' + request.form['name'] + ' could not be updated.')
         finally:
             db.session.close()
     else:
@@ -385,9 +370,10 @@ def edit_venue_submission(venue_id):
 
             db.session.commit()
             flash('Venue ' + request.form['name'] + ' was successfully updated!')
-        except:
+        except Exception as e:
             db.session.commit()
-            flash('An error occurred. Venue ' + request.form['name'] + ' could not be updated.')
+            flash(f"Error Occurred: {e}")
+            flash(f'An error occurred. Venue ' + request.form['name'] + ' could not be updated.')
         finally:
             db.session.close()
     else:
@@ -436,6 +422,8 @@ def create_artist_submission():
     except Exception as e:
         db.session.rollback()
         flash(f"Error Occurred: {e}")
+        # Flash an error message
+        flash(f"An error occurred. Artist {request.form['name']} could not be listed.")
     finally:
         db.session.close()
 
@@ -447,26 +435,17 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-    # Display list of shows at /shows
-    # Fetch all shows from the database
-    all_shows = Show.query.all()
+    shows = Show.query.all()
     data = []
-
-    for show in all_shows:
-        # Get venue and artist details for each show
-        venue = Venue.query.get(show.venue_id)
-        artist = Artist.query.get(show.artist_id)
-
-        # Format the data
+    for show in shows:
         data.append({
-            "venue_id": show.venue_id,
-            "venue_name": venue.name,
-            "artist_id": show.artist_id,
-            "artist_name": artist.name,
-            "artist_image_link": artist.image_link,
-            "start_time": str(show.start_time)
+            "venue_id": show.venue.id,
+            "venue_name": show.venue.name,
+            "artist_id": show.artist.id,
+            "artist_name": show.artist.name,
+            "artist_image_link": show.artist.image_link,
+            "start_time": show.start_time.strftime("%Y-%m-%d %H:%M:%S")
         })
-
     return render_template('pages/shows.html', shows=data)
 
 
@@ -500,6 +479,7 @@ def create_show_submission():
         db.session.rollback()
         # Flash an error message
         flash(f"Error Occurred: {e}")
+        flash(f"An error occurred. Show could not be listed.")
     finally:
         # Close the session
         db.session.close()
