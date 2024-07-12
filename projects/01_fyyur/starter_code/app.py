@@ -21,12 +21,13 @@ import dateutil.parser
 app = Flask(__name__)
 moment = Moment(app)
 app.config.from_object('config')
-migrate = Migrate(app, db)
 db.init_app(app)
+migrate = Migrate(app, db)
+
 
 # TODO: connect to a local postgresql database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1234@localhost:5432/fyyur'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1234@localhost:5432/fyyur'
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 
 # ----------------------------------------------------------------------------#
@@ -59,23 +60,26 @@ def index():
 
 @app.route('/venues')
 def venues():
+    # TODO: replace with real venues data.
+    #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
+    venue_data = db.session.query(Venue.city, Venue.state).distinct().all()
     data = []
-    areas = Venue.query.distinct(Venue.city, Venue.state).all()
-    for area in areas:
-        venues_in_area = Venue.query.filter_by(city=area.city, state=area.state).all()
+    for venue in venue_data:
+        venues = db.session.query(Venue).filter(Venue.city == venue.city, Venue.state == venue.state).all()
         venue_data = []
-        for venue in venues_in_area:
-            num_upcoming_shows = len([show for show in venue.shows if show.start_time > datetime.now()])
+        for venue in venues:
             venue_data.append({
                 "id": venue.id,
                 "name": venue.name,
-                "num_upcoming_shows": num_upcoming_shows
+                "num_upcoming_shows": db.session.query(Show).filter(Show.venue_id == Venue.id,
+                                                                    Show.start_time > datetime.now()).count()
             })
         data.append({
-            "city": area.city,
-            "state": area.state,
+            "city": venue.city,
+            "state": venue.state,
             "venues": venue_data
         })
+
     return render_template('pages/venues.html', areas=data)
 
 
@@ -226,7 +230,14 @@ def delete_venue(venue_id):
 @app.route('/artists')
 def artists():
     # TODO: replace with real data returned from querying the database
-    data = Artist.query.all()
+    artists = Artist.query.all()
+    data = []
+    for artist in artists:
+        data.append({
+            "id": artist.id,
+            "name": artist.name
+        })
+
     return render_template('pages/artists.html', artists=data)
 
 
@@ -465,6 +476,14 @@ def create_show_submission():
         venue_id = request.form.get('venue_id')
         start_time = request.form.get('start_time')
 
+        # Validate artist_id and venue_id to ensure they are integers
+        try:
+            artist_id = int(artist_id)
+            venue_id = int(venue_id)
+        except ValueError:
+            flash("Artist ID and Venue ID must be valid integers.")
+            return redirect(url_for('index'))
+
         # Create a new show record
         new_show = Show(artist_id=artist_id, venue_id=venue_id, start_time=start_time)
 
@@ -479,12 +498,12 @@ def create_show_submission():
         db.session.rollback()
         # Flash an error message
         flash(f"Error Occurred: {e}")
-        flash(f"An error occurred. Show could not be listed.")
+        flash("An error occurred. Show could not be listed.")
     finally:
         # Close the session
         db.session.close()
 
-    return render_template('pages/home.html')
+    return redirect(url_for('index'))
 
 
 @app.errorhandler(404)
