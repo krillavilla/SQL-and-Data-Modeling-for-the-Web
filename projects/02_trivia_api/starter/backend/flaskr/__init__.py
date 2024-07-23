@@ -5,8 +5,6 @@ from flask_cors import CORS
 import random
 import sys
 
-sys.path.append(
-    '/home/krillavilla/Documents/Full_Stack_Web_Development_Udacity/FSND/projects/02_trivia_api/starter/backend')
 
 # Ensure models.py is correctly referenced
 from models import setup_db, Question, Category
