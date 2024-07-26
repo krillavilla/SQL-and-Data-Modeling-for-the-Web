@@ -3,8 +3,6 @@ from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
-import sys
-
 
 # Ensure models.py is correctly referenced
 from models import setup_db, Question, Category
@@ -15,13 +13,20 @@ QUESTIONS_PER_PAGE = 10
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
-    setup_db(app)
+
+    if test_config is None:
+        # Set the default database path with the correct password
+        database_path = 'postgresql://krillavilla:1234@localhost:5432/trivia_test'
+    else:
+        # Use the test configuration database path
+        database_path = test_config.get('DATABASE_URL',
+                                        'postgresql://krillavilla:1234@localhost:5432/trivia_test')
 
     '''
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     '''
 
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resource={r" /*": {"origins": "*"}})
 
     '''
     @TODO: Use the after_request decorator to set Access-Control-Allow
