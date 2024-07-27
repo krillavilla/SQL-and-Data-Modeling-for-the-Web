@@ -1,186 +1,248 @@
-# Frontend - Full Stack Trivia API 
+# Trivia API Frontend Documentation
 
-### Getting Setup
+## Introduction
+The Trivia API Frontend allows you to interact with the Trivia API Backend to manage trivia questions and categories, and play quizzes. The frontend provides endpoints to fetch categories, retrieve questions, add new questions, delete questions, search for questions, and play quizzes by fetching random questions.
 
-> _tip_: this frontend is designed to work with [Flask-based Backend](../backend). It is recommended you stand up the backend first, test using Postman or curl, update the endpoints in the frontend, and then the frontend should integrate smoothly.
+## Endpoints
 
-### Installing Dependencies
+### GET /api/categories
 
-1. **Installing Node and NPM**<br>
-This project depends on Nodejs and Node Package Manager (NPM). Before continuing, you must download and install Node (the download includes NPM) from [https://nodejs.com/en/download](https://nodejs.org/en/download/).
+**URL:** `/api/categories`
 
-2. **Installing project dependencies**<br>
-This project uses NPM to manage software dependencies. NPM Relies on the package.json file located in the `frontend` directory of this repository. After cloning, open your terminal and run:
-```bash
-npm install
-```
->_tip_: **npm i** is shorthand for **npm install**
+**Method:** `GET`
 
-# Required Tasks
+**Description:** Fetches a dictionary of categories where the keys are category IDs and the values are category strings.
 
-### Running Your Frontend in Dev Mode
+**Request Arguments:** None
 
-The frontend app was built using create-react-app. In order to run the app in development mode use ```npm start```. You can change the script in the ```package.json``` file. 
-
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser. The page will reload if you make edits.<br>
-
-```bash
-npm start
-```
-
-### Request Formatting
-
-The frontend should be fairly straightforward and disgestible. You'll primarily work within the ```components``` folder in order to understand, and if you so choose edit, the endpoints utilized by the components. While working on your backend request handling and response formatting, you can reference the frontend to view how it parses the responses. 
-
-After you complete your endpoints, ensure you return to the frontend to confirm your API handles requests and responses appropriately: 
-- Endpoints defined as expected by the frontend
-- Response body provided as expected by the frontend 
-
-### Optional: Updating Endpoints and API behavior
-
-Would you rather the API had different behavior - different endpoints, return the response body in a different format? Go for it! Make the updates to your API and the corresponding updates to the frontend so it works with your API seamlessly. 
-
-
-### Optional: Styling
-
-In addition, you may want to customize and style the frontend by editing the CSS in the ```stylesheets``` folder. 
-
-### Optional: Game Play Mechanics
-
-Currently, when a user plays the game they play up to five questions of the chosen category. If there are fewer than five questions in a category, the game will end when there are no more questions in that category. 
-
-You can optionally update this game play to increase the number of questions or whatever other game mechanics you decide. Make sure to specify the new mechanics of the game in the README of the repo you submit so the reviewers are aware that the behavior is correct. 
-
-
-
->**Spoiler Alert:** If needed, there are details below regarding the expected endpoints and behavior. But, ONLY consult there if necessary, so you give yourself the opportunity to practice understanding code!
-
-# DO NOT PROCEED: ENDPOINT SPOILERS
->Only read the below to confirm your notes regarding the expected API endpoint behavior based on reading the frontend codebase. 
-
-
-**Here are the expected endpoints and behavior**:
-
-
-```js
-GET '/categories'
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
-- Request Arguments: None
-- Returns: An object with a single key, categories, that contains an object of id: category_string key:value pairs. 
+**Response Body:**
+```json
 {
-    'categories': { '1' : "Science",
-    '2' : "Art",
-    '3' : "Geography",
-    '4' : "History",
-    '5' : "Entertainment",
-    '6' : "Sports" }
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  }
 }
 ```
 
+**Response Codes:**
+- `200`: Categories retrieved successfully.
+- `404`: No categories found.
+- `500`: Internal server error.
+- `503`: Service unavailable.
+- `504`: Gateway timeout.
+- `505`: HTTP version not supported.
+- `511`: Network authentication required.
+- `599`: Network connect timeout error.
+- `600`: Unparseable response headers.
+- `601`: Network read timeout error.
+- `602`: Network connect timeout error.
 
-```js
-GET '/questions?page=${integer}'
-- Fetches a paginated set of questions, a total number of questions, all categories and current category string. 
-- Request Arguments: page - integer
-- Returns: An object with 10 paginated questions, total questions, object including all categories, and current category string
+
+### GET /api/questions
+
+**URL:** `/api/questions`
+
+**Method:** `GET`
+
+**Description:** Retrieves a paginated list of questions along with the total number of questions, all categories, and the current category string.
+
+**Request Arguments:**
+- `page` (integer): The page number for pagination. Default is 1.
+- `category` (string, optional): The category to filter questions by.
+- `difficulty` (integer, optional): The difficulty level to filter questions by.
+- `searchTerm` (string, optional): The search term to filter questions by.
+- `previous_questions` (list, optional): The list of previous question IDs for the quiz.
+- `quiz_category` (string, optional): The category for the quiz.
+- `question` (string, optional): The question to add.
+- `answer` (string, optional): The answer to add.
+- `difficulty` (integer, optional): The difficulty level to add.
+- `category` (integer, optional): The category ID to add.
+
+**Response Body:**
+```json
 {
-    'questions': [
-        {
-            'id': 1,
-            'question': 'This is a question',
-            'answer': 'This is an answer', 
-            'difficulty': 5,
-            'category': 2
-        },
-    ],
-    'totalQuestions': 100,
-    'categories': { '1' : "Science",
-    '2' : "Art",
-    '3' : "Geography",
-    '4' : "History",
-    '5' : "Entertainment",
-    '6' : "Sports" },
-    'currentCategory': 'History'
-}
-```
-
-```js
-GET '/categories/${id}/questions'
-- Fetches questions for a cateogry specified by id request argument 
-- Request Arguments: id - integer
-- Returns: An object with questions for the specified category, total questions, and current category string 
-{
-    'questions': [
-        {
-            'id': 1,
-            'question': 'This is a question',
-            'answer': 'This is an answer', 
-            'difficulty': 5,
-            'category': 4
-        },
-    ],
-    'totalQuestions': 100,
-    'currentCategory': 'History'
-}
-```
-
-```js
-DELETE '/questions/${id}'
-- Deletes a specified question using the id of the question
-- Request Arguments: id - integer
-- Returns: Does not need to return anything besides the appropriate HTTP status code. Optionally can return the id of the question. If you are able to modify the frontend, you can have it remove the question using the id instead of refetching the questions. 
-```
-
-```js
-POST '/quizzes'
-- Sends a post request in order to get the next question 
-- Request Body: 
-{'previous_questions':  an array of question id's such as [1, 4, 20, 15]
-'quiz_category': a string of the current category }
-- Returns: a single new question object 
-{
-    'question': {
-        'id': 1,
-        'question': 'This is a question',
-        'answer': 'This is an answer', 
-        'difficulty': 5,
-        'category': 4
+  "questions": [
+    {
+      "id": 1,
+      "question": "What is the largest planet in our solar system?",
+      "answer": "Jupiter",
+      "category": 1,
+      "difficulty": 3
+    },
+    {
+      "id": 2,
+      "question": "What is the capital of France?",
+      "answer": "Paris",
+      "category": 3,
+      "difficulty": 2
     }
+  ],
+  "totalQuestions": 100,
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  },
+  "currentCategory": "History"
 }
 ```
 
-```js
-POST '/questions'
-- Sends a post request in order to add a new question
-- Request Body: 
+**Response Codes:**
+- `200`: Questions retrieved successfully.
+- `404`: No questions found.
+- `500`: Internal server error.
+- `503`: Service unavailable.
+- `504`: Gateway timeout.
+- `505`: HTTP version not supported.
+- `511`: Network authentication required.
+- `599`: Network connect timeout error.
+- `600`: Unparseable response headers.
+- `601`: Network read timeout error.
+- `602`: Network connect timeout error.
+
+
+### GET /api/categories/{id}/questions
+
+**URL:** `/api/categories/{id}/questions`
+
+**Method:** `GET`
+
+**Description:** Fetches questions for a category specified by the ID.
+
+**Request Arguments:**
+- `id` (integer): The ID of the category for which to retrieve questions.
+- `category` (string, optional): The category to filter questions by.
+- `difficulty` (integer, optional): The difficulty level to filter questions by.
+- `searchTerm` (string, optional): The search term to filter questions by.
+- `previous_questions` (list, optional): The list of previous question IDs for the quiz.
+- `quiz_category` (string, optional): The category for the quiz.
+- `question` (string, optional): The question to add.
+- `answer` (string, optional): The answer to add.
+- `difficulty` (integer, optional): The difficulty level to add.
+- `category` (integer, optional): The category ID to add.
+
+**Response Body:**
+```json
 {
-    'question':  'Heres a new question string',
-    'answer':  'Heres a new answer string',
-    'difficulty': 1,
-    'category': 3,
+  "questions": [
+    {
+      "id": 1,
+      "question": "What is the largest planet in our solar system?",
+      "answer": "Jupiter",
+      "category": 1,
+      "difficulty": 3
+    }
+  ],
+  "totalQuestions": 1,
+  "currentCategory": "Science"
 }
-- Returns: Does not return any new data
 ```
 
-```js
-POST '/questions'
-- Sends a post request in order to search for a specific question by search term 
-- Request Body: 
+**Response Codes:**
+- `200`: Questions retrieved successfully.
+- `404`: No questions found for the specified category.
+- `500`: Internal server error.
+- `503`: Service unavailable.
+- `504`: Gateway timeout.
+- `505`: HTTP version not supported.
+- `511`: Network authentication required.
+- `599`: Network connect timeout error.
+- `600`: Unparseable response headers.
+- `601`: Network read timeout error.
+- `602`: Network connect timeout error.
+
+
+### DELETE '/api/questions/${id}'
+Deletes a specified question using the ID of the question.
+
+#### Request Arguments:
+- `id` (integer)
+
+#### Returns:
+- Appropriate HTTP status code. Optionally returns the ID of the deleted question.
+
+### POST '/api/quizzes'
+Fetches the next question for a quiz.
+
+#### Request Body:
+```json
 {
-    'searchTerm': 'this is the term the user is looking for'
-}
-- Returns: any array of questions, a number of totalQuestions that met the search term and the current category string 
-{
-    'questions': [
-        {
-            'id': 1,
-            'question': 'This is a question',
-            'answer': 'This is an answer', 
-            'difficulty': 5,
-            'category': 5
-        },
-    ],
-    'totalQuestions': 100,
-    'currentCategory': 'Entertainment'
+  "previous_questions": [1, 4, 20, 15],
+  "quiz_category": "current category"
 }
 ```
+
+#### Returns:
+```json
+{
+  "question": {
+    "id": 1,
+    "question": "This is a question",
+    "answer": "This is an answer",
+    "difficulty": 5,
+    "category": 4
+  }
+}
+```
+
+### POST '/api/questions'
+Adds a new question.
+
+#### Request Body:
+```json
+{
+  "question": "Heres a new question string",
+  "answer": "Heres a new answer string",
+  "difficulty": 1,
+  "category": 3
+}
+```
+
+#### Returns:
+- Does not return any new data.
+
+### POST '/api/questions'
+Searches for a specific question by search term.
+
+#### Request Body:
+```json
+{
+  "searchTerm": "this is the term the user is looking for"
+}
+```
+
+#### Returns:
+```json
+{
+  "questions": [
+    {
+      "id": 1,
+      "question": "This is a question",
+      "answer": "This is an answer",
+      "difficulty": 5,
+      "category": 5
+    }
+  ],
+  "totalQuestions": 100,
+  "currentCategory": "Entertainment"
+}
+```
+## Author
+
+```
+Krillavilla
+```
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+----------------------------------------------------------------------------------------------

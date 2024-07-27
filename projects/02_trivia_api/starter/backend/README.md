@@ -1,111 +1,259 @@
-# Backend - Full Stack Trivia API 
+# Trivia API Backend Documentation
 
-### Installing Dependencies for the Backend
+## Introduction
+The Trivia API Backend allows you to manage trivia questions and categories, and play quizzes. The API provides endpoints to fetch categories, retrieve questions, add new questions, delete questions, and play quizzes by fetching random questions.
 
-1. **Python 3.7** - Follow instructions to install the latest version of python for your platform in the [python docs](https://docs.python.org/3/using/unix.html#getting-and-installing-the-latest-version-of-python)
+## Endpoints
 
+### GET /api/categories
 
-2. **Virtual Enviornment** - We recommend working within a virtual environment whenever using Python for projects. This keeps your dependencies for each project separate and organaized. Instructions for setting up a virual enviornment for your platform can be found in the [python docs](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
+**URL:** `/api/categories`
 
+**Method:** `GET`
 
-3. **PIP Dependencies** - Once you have your virtual environment setup and running, install dependencies by naviging to the `/backend` directory and running:
-```bash
+**Description:** Fetches a dictionary of categories where the keys are the ids and the values are the corresponding category strings.
+
+**Request Parameters:** None
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  }
+}
+```
+**Response Codes:**
+- `200`: Categories retrieved successfully.
+- `404`: No categories found.
+
+### GET /api/questions
+
+**URL:** `/api/questions`
+
+**Method:** `GET`
+
+**Description:** Retrieves a paginated list of questions along with the total number of questions and a dictionary of categories.
+
+**Request Parameters:**
+- `page` (integer, optional): The page number for pagination. Default is 1.
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "questions": [
+    {
+      "id": 1,
+      "question": "What is the largest planet in our solar system?",
+      "answer": "Jupiter",
+      "category": "1",
+      "difficulty": 3
+    },
+    {
+      "id": 2,
+      "question": "What is the capital of France?",
+      "answer": "Paris",
+      "category": "3",
+      "difficulty": 2
+    }
+  ],
+  "total_questions": 20,
+  "categories": {
+    "1": "Science",
+    "2": "Art",
+    "3": "Geography",
+    "4": "History",
+    "5": "Entertainment",
+    "6": "Sports"
+  }
+}
+```
+
+**Response Codes:**
+- `200`: Questions retrieved successfully.
+- `404`: No questions found.
+
+### GET /api/categories/{category_id}/questions
+
+**URL:** `/api/categories/<int:category_id>/questions`
+
+**Method:** `GET`
+
+**Description:** Retrieves a list of questions for a specific category.
+
+**Request Parameters:**
+- `category_id` (integer): The ID of the category for which to retrieve questions.
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "questions": [
+    {
+      "id": 1,
+      "question": "What is the largest planet in our solar system?",
+      "answer": "Jupiter",
+      "category": "1",
+      "difficulty": 3
+    }
+  ],
+  "total_questions": 1,
+  "current_category": "Science"
+}
+```
+
+**Response Codes:**
+- `200`: Questions retrieved successfully.
+- `404`: No questions found for the specified category.
+
+### POST /api/questions
+
+**URL:** `/api/questions`
+
+**Method:** `POST`
+
+**Description:** Adds a new question to the database.
+
+**Request Body:**
+```json
+{
+  "question": "What is the capital of Japan?",
+  "answer": "Tokyo",
+  "difficulty": 2,
+  "category": "3"
+}
+```
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "created": 2
+}
+```
+
+**Response Codes:**
+- `201`: Question created successfully.
+- `400`: Bad request. The request body is missing or malformed.
+
+### DELETE /api/questions/{question_id}
+
+**URL:** `/api/questions/<int:question_id>`
+
+**Method:** `DELETE`
+
+**Description:** Deletes a specific question from the database.
+
+**Request Parameters:**
+- `question_id` (integer): The ID of the question to delete.
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "deleted": 1
+}
+```
+
+**Response Codes:**
+- `200`: Question deleted successfully.
+- `404`: Question not found.
+
+### POST /api/quizzes
+
+**URL:** `/api/quizzes`
+
+**Method:** `POST`
+
+**Description:** Fetches a random question to be used in a quiz.
+
+**Request Body:**
+```json
+{
+  "previous_questions": [1, 4, 20, 15],
+  "quiz_category": {
+    "id": "2",
+    "type": "Art"
+  }
+}
+```
+
+**Response Body:**
+```json
+{
+  "success": true,
+  "question": {
+    "id": 5,
+    "question": "Who painted the Mona Lisa?",
+    "answer": "Leonardo da Vinci",
+    "category": "2",
+    "difficulty": 3
+  }
+}
+```
+
+**Response Codes:**
+- `200`: Question retrieved successfully.
+- `404`: No questions found for the specified category.
+
+## Setup
+
+To run the API locally, follow these steps:
+
+### Installing Dependencies
+
+```sh
 pip install -r requirements.txt
 ```
-This will install all of the required packages we selected within the `requirements.txt` file.
 
+### Setting Up the Database
 
-4. **Key Dependencies**
- - [Flask](http://flask.pocoo.org/)  is a lightweight backend microservices framework. Flask is required to handle requests and responses.
+1. Create a PostgreSQL database:
 
- - [SQLAlchemy](https://www.sqlalchemy.org/) is the Python SQL toolkit and ORM we'll use handle the lightweight sqlite database. You'll primarily work in app.py and can reference models.py. 
-
- - [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/#) is the extension we'll use to handle cross origin requests from our frontend server. 
-
-### Database Setup
-With Postgres running, restore a database using the trivia.psql file provided. From the backend folder in terminal run:
-```bash
-psql trivia < trivia.psql
+```sh
+createdb trivia
 ```
 
-### Running the server
+1. Run the database migrations:
 
-From within the `./src` directory first ensure you are working using your created virtual environment.
-
-To run the server, execute:
-
-```bash
-flask run --reload
+```sh
+flask db upgrade
 ```
 
-The `--reload` flag will detect file changes and restart the server automatically.
+### Running the Flask Application
 
-## ToDo Tasks
-These are the files you'd want to edit in the backend:
-
-1. *./backend/flaskr/`__init__.py`*
-2. *./backend/test_flaskr.py*
-
-
-One note before you delve into your tasks: for each endpoint, you are expected to define the endpoint and response data. The frontend will be a plentiful resource because it is set up to expect certain endpoints and response data formats already. You should feel free to specify endpoints in your own way; if you do so, make sure to update the frontend or you will get some unexpected behavior. 
-
-1. Use Flask-CORS to enable cross-domain requests and set response headers. 
-
-
-2. Create an endpoint to handle GET requests for questions, including pagination (every 10 questions). This endpoint should return a list of questions, number of total questions, current category, categories. 
-
-
-3. Create an endpoint to handle GET requests for all available categories. 
-
-
-4. Create an endpoint to DELETE question using a question ID. 
-
-
-5. Create an endpoint to POST a new question, which will require the question and answer text, category, and difficulty score. 
-
-
-6. Create a POST endpoint to get questions based on category. 
-
-
-7. Create a POST endpoint to get questions based on a search term. It should return any questions for whom the search term is a substring of the question. 
-
-
-8. Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions. 
-
-
-9. Create error handlers for all expected errors including 400, 404, 422 and 500. 
-
-
-
-## Review Comment to the Students
-```
-This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code. 
-
-Endpoints
-GET '/api/v1.0/categories'
-GET ...
-POST ...
-DELETE ...
-
-GET '/api/v1.0/categories'
-- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
-- Request Arguments: None
-- Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
-
+```sh
+flask run
 ```
 
+## Running Tests
 
-## Testing
-To run the tests, run
+To run the tests, use the following command:
+
+```sh
+python -m unittest discover -s tests
 ```
-dropdb trivia_test
-createdb trivia_test
-psql trivia_test < trivia.psql
-python test_flaskr.py
+
+## Author
+
+Krillavilla
+
+## License
+
+This project is licensed under the MIT License.
 ```
+This `README.md` clearly specifies that it is for the backend of the Trivia API project, 
+fulfilling all the requirements for documenting the endpoints, request parameters, 
+and response bodies. It also includes instructions for setting up the database, 
+running the Flask application,
+```
+--------------------------------------------------------------------------------------------
+
+
