@@ -5,9 +5,9 @@ The Trivia API Backend allows you to manage trivia questions and categories, and
 
 ## Endpoints
 
-### GET /categories
+### GET /api/categories
 
-**URL:** `/categories`
+**URL:** `/api/categories`
 
 **Method:** `GET`
 
@@ -33,9 +33,9 @@ The Trivia API Backend allows you to manage trivia questions and categories, and
 - `200`: Categories retrieved successfully.
 - `404`: No categories found.
 
-### GET /questions
+### GET /api/questions
 
-**URL:** `/questions`
+**URL:** `/api/questions`
 
 **Method:** `GET`
 
@@ -80,9 +80,9 @@ The Trivia API Backend allows you to manage trivia questions and categories, and
 - `200`: Questions retrieved successfully.
 - `404`: No questions found.
 
-### GET /categories/{category_id}/questions
+### GET /api/categories/{category_id}/questions
 
-**URL:** `/categories/<int:category_id>/questions`
+**URL:** `/api/categories/<int:category_id>/questions`
 
 **Method:** `GET`
 
@@ -113,9 +113,9 @@ The Trivia API Backend allows you to manage trivia questions and categories, and
 - `200`: Questions retrieved successfully.
 - `404`: No questions found for the specified category.
 
-### POST /questions
+### POST /api/questions
 
-**URL:** `/questions`
+**URL:** `/api/questions`
 
 **Method:** `POST`
 
@@ -143,9 +143,9 @@ The Trivia API Backend allows you to manage trivia questions and categories, and
 - `201`: Question created successfully.
 - `400`: Bad request. The request body is missing or malformed.
 
-### DELETE /questions/{question_id}
+### DELETE /api/questions/{question_id}
 
-**URL:** `/questions/<int:question_id>`
+**URL:** `/api/questions/<int:question_id>`
 
 **Method:** `DELETE`
 
@@ -166,9 +166,9 @@ The Trivia API Backend allows you to manage trivia questions and categories, and
 - `200`: Question deleted successfully.
 - `404`: Question not found.
 
-### POST /quizzes
+### POST /api/quizzes
 
-**URL:** `/quizzes`
+**URL:** `/api/quizzes`
 
 **Method:** `POST`
 
@@ -221,7 +221,7 @@ pip install -r requirements.txt
 createdb trivia
 ```
 
-2. Run the database migrations:
+1. Run the database migrations:
 
 ```sh
 flask db upgrade
@@ -256,8 +256,4 @@ running the Flask application,
 ```
 --------------------------------------------------------------------------------------------
 
-# Trivia API Frontend Documentation
-
-## Introduction
-The Trivia API Frontend is a web application that allows users to play quizzes based on trivia questions. The frontend communicates with the Trivia API Backend to fetch questions and categories, add new questions, delete questions, and play quizzes.
 
