@@ -1,4 +1,7 @@
 import os
+import unittest
+import json
+
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -14,10 +17,12 @@ def create_app(test_config=None):
     app = Flask(__name__)
 
     if test_config is None:
-        setup_db(app)
+        # Set the default database path with the correct password
+        database_path = 'postgresql://<username>:<password>@localhost:5432/trivia_test'
     else:
-        database_path = test_config.get('SQLALCHEMY_DATABASE_URI')
-        setup_db(app, database_path=database_path)
+        # Use the test configuration database path
+        database_path = test_config.get('DATABASE_URL',
+                                        'postgresql://<username>:<password>@localhost:5432/trivia_test')
 
     """
     @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
@@ -78,24 +83,16 @@ def create_app(test_config=None):
 
     @app.route('/questions', methods=['GET'])
     def get_questions():
-        page = request.args.get('page', 1, type=int)
-        start = (page - 1) * QUESTIONS_PER_PAGE
-        end = start + QUESTIONS_PER_PAGE
-
-        questions = Question.query.order_by(Question.id).all()
-        current_questions = [question.format() for question in questions][start:end]
-
-        if len(current_questions) == 0:
-            abort(404)
-
-        categories = Category.query.order_by(Category.id).all()
-        categories_dict = {category.id: category.type for category in categories}
+        questions = Question.query.all()
+        formatted_questions = [question.format() for question in questions]
+        categories = Category.query.all()
+        formatted_categories = {category.id: category.type for category in categories}
 
         return jsonify({
             'success': True,
-            'questions': current_questions,
-            'total_questions': len(questions),
-            'categories': categories_dict,
+            'questions': formatted_questions,
+            'total_questions': len(formatted_questions),
+            'categories': formatted_categories,
             'current_category': None
         })
 
