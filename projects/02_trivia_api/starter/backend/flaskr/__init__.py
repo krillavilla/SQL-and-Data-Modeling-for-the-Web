@@ -18,21 +18,22 @@ def create_app(test_config=None):
 
     if test_config is None:
         # Set the default database path with the correct password
-        database_path = 'postgresql://<username>:<password>@localhost:5432/trivia_test'
+        database_path = 'postgresql://username:password@localhost:5432/trivia_test'
     else:
         # Use the test configuration database path
         database_path = test_config.get('DATABASE_URL',
-                                        'postgresql://<username>:<password>@localhost:5432/trivia_test')
+                                        'postgresql://username:password@localhost:5432/trivia_test')
 
-    """
-    @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
-    """
+    app.config['SQLALCHEMY_DATABASE_URI'] = database_path
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Add this line
+
+    # Set up the database
+    setup_db(app)
+
+    # Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     CORS(app, resources={r"/*": {"origins": "*"}})
 
-    """
-    @TODO: Use the after_request decorator to set Access-Control-Allow
-    """
-
+    # Use the after_request decorator to set Access-Control-Allow
     @app.after_request
     def after_request(response):
         response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
@@ -45,7 +46,7 @@ def create_app(test_config=None):
     for all available categories.
     """
 
-    @app.route('/categories', methods=['GET'])
+    @app.route('/api/categories', methods=['GET'])
     def get_categories():
         categories = Category.query.order_by(Category.id).all()
         categories_dict = {category.id: category.type for category in categories}
@@ -81,7 +82,7 @@ def create_app(test_config=None):
 
         return current_questions
 
-    @app.route('/questions', methods=['GET'])
+    @app.route('/api/questions', methods=['GET'])
     def get_questions():
         questions = Question.query.all()
         formatted_questions = [question.format() for question in questions]
@@ -104,7 +105,7 @@ def create_app(test_config=None):
     This removal will persist in the database and when you refresh the page.
     """
 
-    @app.route('/questions/<int:question_id>', methods=['DELETE'])
+    @app.route('/api/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
         question = Question.query.get(question_id)
         if question is None:
@@ -126,7 +127,7 @@ def create_app(test_config=None):
     of the questions list in the "List" tab.
     """
 
-    @app.route('/questions', methods=['POST'])
+    @app.route('/api/questions', methods=['POST'])
     def create_question():
         body = request.get_json()
         question = body.get('question', None)
@@ -153,7 +154,7 @@ def create_app(test_config=None):
     Try using the word "title" to start.
     """
 
-    @app.route('/questions/search', methods=['POST'])
+    @app.route('/api/questions/search', methods=['POST'])
     def search_questions():
         body = request.get_json()
         search_term = body.get('searchTerm', None)
@@ -177,7 +178,7 @@ def create_app(test_config=None):
     category to be shown.
     """
 
-    @app.route('/categories/<int:category_id>/questions', methods=['GET'])
+    @app.route('/api/categories/<int:category_id>/questions', methods=['GET'])
     def get_questions_by_category(category_id):
         questions = Question.query.filter(Question.category == category_id).all()
         current_questions = paginate_questions(request, questions)
@@ -200,7 +201,7 @@ def create_app(test_config=None):
     and shown whether they were correct or not.
     """
 
-    @app.route('/quizzes', methods=['POST'])
+    @app.route('/api/quizzes', methods=['POST'])
     def play_quiz():
         body = request.get_json()
         previous_questions = body.get('previous_questions', [])

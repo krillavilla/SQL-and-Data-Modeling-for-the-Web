@@ -13,7 +13,7 @@ class TriviaTestCase(unittest.TestCase):
     def setUp(self):
         """Define test variables and initialize app."""
         self.database_name = "trivia_test"
-        self.database_path = "postgresql://{}:{}@{}/{}".format('krillavilla', '1234', 'localhost:5432', self.database_name)
+        self.database_path = "postgresql://{}:{}@{}/{}".format('username', 'password', 'localhost:5432', self.database_name)
 
         self.app = create_app({
             "SQLALCHEMY_DATABASE_URI": self.database_path
