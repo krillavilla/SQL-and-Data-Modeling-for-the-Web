@@ -8,6 +8,8 @@ from flask_cors import CORS
 import random
 
 from models import setup_db, Question, Category
+from settings import DB_USER, DB_PASSWORD, DB_HOST, DB_PORT
+
 
 QUESTIONS_PER_PAGE = 10
 
@@ -18,17 +20,17 @@ def create_app(test_config=None):
 
     if test_config is None:
         # Set the default database path with the correct password
-        database_path = 'postgresql://username:password@localhost:5432/trivia_test'
+        database_path = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/trivia'
     else:
         # Use the test configuration database path
-        database_path = test_config.get('DATABASE_URL',
-                                        'postgresql://username:password@localhost:5432/trivia_test')
+        database_path = test_config.get('database_path' or f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/trivia_test')
 
     app.config['SQLALCHEMY_DATABASE_URI'] = database_path
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Add this line
 
     # Set up the database
-    setup_db(app)
+    with app.app_context():
+        setup_db(app)
 
     # Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
     CORS(app, resources={r"/*": {"origins": "*"}})

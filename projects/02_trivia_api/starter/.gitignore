@@ -4,6 +4,8 @@ venv
 
 # OS generated files #
 ######################
+backend/.env
+backend/settings.py
 .DS_Store
 .DS_Store?
 ._*
